@@ -61,6 +61,13 @@ def eliminar_carpetas_vacias(carpeta):
             if not os.listdir(ruta_dir):  # Si la carpeta está vacía
                 os.rmdir(ruta_dir)
 
+# Función para obtener estadísticas de archivos
+def obtener_estadisticas(carpeta):
+    archivos = obtener_archivos(carpeta)
+    total_archivos = len(archivos)
+    tamano_total = calcular_tamano_carpeta(carpeta)
+    return total_archivos, tamano_total
+
 # Obtener todos los archivos de carpeta1 y carpeta2
 archivos_carpeta1 = obtener_archivos(carpeta1)
 archivos_carpeta2 = obtener_archivos(carpeta2)
@@ -80,6 +87,17 @@ with open(log_file, 'w') as log:
     log.write(f"======== Log de Ejecución: {fecha_hora_actual} ========\n\n")
 
     archivos_movidos = 0
+
+    # Mostrar estadísticas iniciales
+    total_archivos1, tamano_total1 = obtener_estadisticas(carpeta1)
+    total_archivos2, tamano_total2 = obtener_estadisticas(carpeta2)
+
+    log_message = (f"Estadísticas iniciales:\n"
+                   f"  - Carpeta 1: {total_archivos1} archivos, {tamano_total1 / (1024 * 1024):.2f} MB\n"
+                   f"  - Carpeta 2: {total_archivos2} archivos, {tamano_total2 / (1024 * 1024):.2f} MB\n"
+                    "-------------\n")
+    print(log_message)
+    log.write(log_message)
 
     # Mover archivos duplicados de carpeta2 a la carpeta de duplicados
     for archivo2 in archivos_carpeta2:
@@ -102,9 +120,9 @@ with open(log_file, 'w') as log:
                 shutil.move(archivo2, nueva_ruta)
                 log_message = (f"Archivo Movido:\n"
                                f"  - Desde: {archivo2}\n"
-                               f"  - Hacia: {nueva_ruta}\n\n"
+                               f"  - Hacia: {nueva_ruta}\n"
                                f"Archivo duplicado encontrado en:\n"
-                               f"  - {archivo_carpeta1}\n\n"
+                               f"  - {archivo_carpeta1}\n"
                                "-------------\n")
                 print(log_message)
                 log.write(log_message)
@@ -120,7 +138,21 @@ with open(log_file, 'w') as log:
     # Calcular el tamaño total de la carpeta duplicados
     tamano_total_duplicados = calcular_tamano_carpeta(carpeta_duplicados)
 
-    # Escribir el resumen en el log
+    # Mostrar estadísticas finales
+    total_archivos_final, tamano_total_final = obtener_estadisticas(carpeta2)
+
+    log_message = (f"\nEstadísticas finales:\n"
+                   f"  - Carpeta 2: {total_archivos_final} archivos, {tamano_total_final / (1024 * 1024):.2f} MB\n"
+                   f"  - Carpeta de duplicados: {archivos_movidos} archivos, {tamano_total_duplicados / (1024 * 1024):.2f} MB\n"
+                    "-------------\n")
+    print(log_message)
+    log.write(log_message)
+
+    if archivos_movidos == 0:
+        no_archivos_movidos_message = "No se ha movido ningún archivo.\n"
+        log.write(no_archivos_movidos_message)
+        print(no_archivos_movidos_message)
+
     log.write("\n======== Resumen del Proceso ========\n")
     log.write(f"Total de archivos movidos: {archivos_movidos}\n")
     log.write(f"Tamaño total de la carpeta 'duplicados': {tamano_total_duplicados / (1024 * 1024):.2f} MB\n")
