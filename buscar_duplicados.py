@@ -66,7 +66,7 @@ archivos_carpeta1 = obtener_archivos(carpeta1)
 archivos_carpeta2 = obtener_archivos(carpeta2)
 
 # Crear un diccionario para almacenar los archivos de carpeta1 con su tamaño y ruta sin las dos primeras carpetas
-dic_archivos_carpeta1 = {obtener_ruta_sin_dos_primeras(carpeta1, archivo): os.path.getsize(archivo) for archivo in archivos_carpeta1}
+dic_archivos_carpeta1 = {obtener_ruta_sin_dos_primeras(carpeta1, archivo): archivo for archivo in archivos_carpeta1}
 
 # Obtener la fecha y hora actual para el nombre del archivo de log
 fecha_hora_actual = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -77,7 +77,7 @@ start_time = time.time()
 
 # Abrir el archivo de log para escritura
 with open(log_file, 'w') as log:
-    log.write(f"Log de ejecución: {fecha_hora_actual}\n\n")
+    log.write(f"======== Log de Ejecución: {fecha_hora_actual} ========\n\n")
 
     archivos_movidos = 0
 
@@ -89,7 +89,10 @@ with open(log_file, 'w') as log:
 
         # Comprobar si hay un archivo con la misma ruta relativa sin las dos primeras carpetas y tamaño en carpeta1
         if ruta_relativa_sin_dos_primeras_2 in dic_archivos_carpeta1:
-            if tamano_archivo2 == dic_archivos_carpeta1[ruta_relativa_sin_dos_primeras_2]:
+            archivo_carpeta1 = dic_archivos_carpeta1[ruta_relativa_sin_dos_primeras_2]
+            tamano_archivo_carpeta1 = os.path.getsize(archivo_carpeta1)
+
+            if tamano_archivo2 == tamano_archivo_carpeta1:
                 # Crear la nueva ruta en la carpeta de duplicados
                 nueva_ruta = os.path.join(carpeta_duplicados, ruta_relativa_sin_dos_primeras_2)
                 nueva_carpeta = os.path.dirname(nueva_ruta)
@@ -97,9 +100,14 @@ with open(log_file, 'w') as log:
                     os.makedirs(nueva_carpeta)
                 # Mover el archivo
                 shutil.move(archivo2, nueva_ruta)
-                log_message = f"Movido: {archivo2} a {nueva_ruta}"
+                log_message = (f"Archivo Movido:\n"
+                               f"  - Desde: {archivo2}\n"
+                               f"  - Hacia: {nueva_ruta}\n\n"
+                               f"Archivo duplicado encontrado en:\n"
+                               f"  - {archivo_carpeta1}\n\n"
+                               "-------------\n")
                 print(log_message)
-                log.write(log_message + "\n")
+                log.write(log_message)
                 archivos_movidos += 1
 
     # Eliminar carpetas vacías en carpeta2 después de mover los archivos
@@ -113,9 +121,10 @@ with open(log_file, 'w') as log:
     tamano_total_duplicados = calcular_tamano_carpeta(carpeta_duplicados)
 
     # Escribir el resumen en el log
-    log.write("\nResumen del proceso:\n")
+    log.write("\n======== Resumen del Proceso ========\n")
     log.write(f"Total de archivos movidos: {archivos_movidos}\n")
     log.write(f"Tamaño total de la carpeta 'duplicados': {tamano_total_duplicados / (1024 * 1024):.2f} MB\n")
     log.write(f"Tiempo total del proceso: {tiempo_total:.2f} segundos\n")
+    log.write("====================================\n")
 
 print("Proceso completado.")
